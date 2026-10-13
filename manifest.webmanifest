@@ -1,7 +1,7 @@
 {
-  "name": "장기",
-  "short_name": "장기",
-  "description": "AI와 두는 한국 장기. 난이도 4단계, 마·상 자리를 바꾸는 상차림.",
+  "name": "장기·오목",
+  "short_name": "장기·오목",
+  "description": "AI와 두는 장기와 오목. 난이도 4단계.",
   "lang": "ko",
   "start_url": "./",
   "scope": "./",
