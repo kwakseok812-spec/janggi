@@ -33,7 +33,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-
 @keyframes scr{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
 
 /* ---------- 대국 전 설정 ---------- */
-#setup{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+#setup,#osetup{overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 .setup-in{max-width:460px;margin:0 auto;padding:4px 8px 84px;display:grid;gap:14px}
 .brand{display:flex;align-items:baseline;gap:10px;padding-top:4px}
 .brand .back{align-self:center}
@@ -63,10 +63,10 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-
   font-weight:800;font-size:17px;letter-spacing:.04em;box-shadow:0 6px 18px rgba(0,0,0,.4);transition:transform .12s,filter .15s}
 .primary:active{transform:scale(.97);filter:brightness(.94)}
 @media (min-width:820px) and (min-aspect-ratio:11/10){
-  .setup-in{max-width:900px;grid-template-columns:1fr 1fr;column-gap:28px;align-content:start}
-  .setup-in .brand{grid-column:1/3}
-  .setup-in .g-side,.setup-in .g-lv{grid-column:1}
-  .setup-in .g-set{grid-column:2;grid-row:2/5}
+  #setup .setup-in{max-width:900px;grid-template-columns:1fr 1fr;column-gap:28px;align-content:start}
+  #setup .setup-in .brand{grid-column:1/3}
+  #setup .setup-in .g-side,#setup .setup-in .g-lv{grid-column:1}
+  #setup .setup-in .g-set{grid-column:2;grid-row:2/5}
 }
 
 /* ---------- 대국 화면 ---------- */
@@ -162,7 +162,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-
 #modal{position:fixed;inset:0;z-index:50;display:flex;align-items:flex-end;justify-content:center;background:rgba(0,0,0,.55);animation:fade .18s ease both;padding:12px calc(12px + env(safe-area-inset-right)) calc(12px + env(safe-area-inset-bottom)) calc(12px + env(safe-area-inset-left))}
 #modal[hidden]{display:none}
 @keyframes fade{from{opacity:0}to{opacity:1}}
-.sheet{width:100%;max-width:420px;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:18px 16px 14px;animation:up .26s cubic-bezier(.2,.9,.2,1) both;box-shadow:0 20px 50px rgba(0,0,0,.6)}
+.sheet{max-height:calc(100vh - 24px);max-height:calc(100dvh - 24px);overflow-y:auto;overscroll-behavior:contain;touch-action:pan-y;width:100%;max-width:420px;background:var(--bg2);border:1px solid var(--line);border-radius:18px;padding:18px 16px 14px;animation:up .26s cubic-bezier(.2,.9,.2,1) both;box-shadow:0 20px 50px rgba(0,0,0,.6)}
 @keyframes up{from{transform:translateY(40px);opacity:0}to{transform:none;opacity:1}}
 .sheet h3{margin:0 0 6px;font-size:19px;font-family:var(--serif);letter-spacing:.02em}
 .sheet p{margin:0 0 4px;color:var(--dim);font-size:14px;line-height:1.5}
@@ -202,7 +202,7 @@ button{font:inherit;color:inherit;border:0;background:none;cursor:pointer;touch-
 .seg.rule{grid-template-columns:1fr 1fr}
 .seg.rule button{display:grid;gap:2px;text-align:left;padding:10px 12px}
 .seg.rule b{font-size:15px}.seg.rule small{color:var(--dim);font-size:11.5px;white-space:nowrap}
-.osetup-in{grid-template-columns:1fr !important;max-width:460px !important}
+.osetup-in{max-width:480px}
 .osetup-in .link{justify-self:start;color:var(--gold);padding:8px 2px;font-size:13.5px}
 .osetup-in .brand .link{color:var(--ink)}
 .rules{margin:6px 0 8px;padding-left:18px;color:var(--ink);font-size:14px;line-height:1.55}
@@ -1653,7 +1653,10 @@ function flash(txt){ var f=$(S.screen==='ogame'?'oFlash':'flash'); f.textContent
 /* ---------- 화면 전환·크기 맞춤 ---------- */
 function show(name){
   S.screen=name; $('toast').classList.remove('on'); clearTimeout(noteT); noteMsg='';
-  ['home','setup','game','osetup','ogame'].forEach(function(n){ var el=$(n); el.hidden=(n!==name); if(n===name){ el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter'); } });
+  ['home','setup','game','osetup','ogame'].forEach(function(n){ var el=$(n); el.hidden=(n!==name);
+    if(n===name){ el.classList.remove('enter'); void el.offsetWidth; el.classList.add('enter');
+      /* 들어오는 움직임이 끝나면 표시를 지운다: 남겨 두면 화면 아래에 붙여 둔 「대국 시작」 단추가 스크롤을 따라 올라간다 */
+      clearTimeout(el._et); el._et=setTimeout(function(){ el.classList.remove('enter'); },450); } });
   layout();
 }
 function layout(){
@@ -2068,7 +2071,7 @@ function oRenderSetup(){
   Array.prototype.forEach.call($('oSegRule').children,function(b){ b.setAttribute('aria-pressed',(b.dataset.rule===O.rule)?'true':'false'); });
   $('oLvDesc').textContent=OLVDESC[O.level];
   $('oRuleDesc').textContent=O.rule==='renju'? '렌주의 금수 규칙을 따릅니다. 흑은 삼삼·사사·6목 이상 자리에 둘 수 없고, 백은 금수가 없습니다.'
-                                             : '흑백 모두 제한이 없습니다. 다섯 개 이상을 한 줄로 놓으면 이깁니다.';
+                                             : '흑백 모두 제한이 없습니다. 다섯 개 이상을 한 줄로 놓으면 이깁니다. 금수가 없으면 먼저 두는 흑이 유리합니다.';
 }
 function oEnterSetup(){ navIn('omok'); show('osetup'); oRenderSetup(); }
 $('oSegSide').addEventListener('click',function(e){ var b=e.target.closest('button'); if(!b) return; O.side=+b.dataset.side; oSavePrefs(); oRenderSetup(); });
@@ -2078,11 +2081,11 @@ function oRulesHTML(rule){
   var h='<p>다섯 개를 먼저 한 줄로 놓으면 이깁니다(가로·세로·대각선). 흑이 먼저 둡니다.</p>';
   if(rule==='renju') h+='<ul class="rules"><li><b>렌주의 금수 규칙</b>을 따릅니다(대회용 첫 수·오프닝 규칙은 쓰지 않습니다).</li>'
     +'<li>흑은 <b>삼삼</b>(열린 3이 두 줄), <b>사사</b>(4가 두 개), <b>장목</b>(6목 이상)이 되는 자리에 둘 수 없습니다.</li>'
-    +'<li>한쪽이 막힌 3은 3으로 세지 않습니다.</li>'
+    +'<li>3은 한 수 더 두어 <b>양쪽이 열린 4</b>가 될 수 있을 때만 3으로 셉니다. 그래서 한쪽 끝에 상대 돌이나 판 끝이 바로 붙어 있는 3은 세지 않습니다.</li>'
     +'<li>그 수로 정확히 5목이 되면 금수 모양이 함께 생겨도 흑이 이깁니다.</li>'
     +'<li>백은 금수가 없습니다(6목도 승리).</li>'
     +'<li>판이 다 차거나 흑이 둘 곳이 없으면 비깁니다.</li></ul><p>내가 흑이면 둘 수 없는 자리에 옅은 ✕가 보입니다.</p>';
-  else h+='<ul class="rules"><li><b>금수 없음</b>: 흑백 모두 제한이 없습니다.</li><li>5목 이상(6목 포함)이면 이깁니다.</li><li>판이 다 차면 비깁니다.</li></ul>';
+  else h+='<ul class="rules"><li><b>금수 없음</b>: 흑백 모두 제한이 없습니다.</li><li>5목 이상(6목 포함)이면 이깁니다.</li><li>금수가 없으면 먼저 두는 흑이 유리합니다.</li><li>판이 다 차면 비깁니다.</li></ul>';
   return h;
 }
 function oShowRules(rule){ ask('오목 규칙 · '+ORULE[rule], oRulesHTML(rule), [{t:'닫기',pri:true}]); }
